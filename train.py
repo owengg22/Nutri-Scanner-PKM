@@ -8,4 +8,4 @@ model = YOLO('yolov8n.pt')
 # epochs=50 artinya dia bakal baca buku pelajarannya diulang 50 kali (biar pinter).
 # imgsz=640 adalah ukuran gambarnya.
 if __name__ == '__main__':
-    model.train(data='Nutri-Scanner-PKM-1/data.yaml', epochs=50, imgsz=640)
+    model.train(data='Nutri-Scanner-PKM-1/data.yaml', epochs=50, imgsz=640)5 

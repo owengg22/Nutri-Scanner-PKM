@@ -1,34 +1,61 @@
 from ultralytics import YOLO
 import cv2
 
-# 1. Panggil Model yang BARU saja lulus training
-# Perhatikan path-nya: runs/detect/train2/weights/best.pt
+# 1. Panggil Model
 model = YOLO('runs/detect/train2/weights/best.pt')
 
-# 2. Nyalakan Kamera Laptop
-cap = cv2.VideoCapture(0)
+# 2. Setting Kamera (Pilih 0, 1, atau 2)
+source_kamera = 2 
+cap = cv2.VideoCapture(source_kamera)
 
-print("Kamera sedang dinyalakan... Tekan 'q' untuk keluar.")
+if not cap.isOpened():
+    print("❌ ERROR: Kamera tidak terdeteksi!")
+    exit()
+
+print("✅ Kamera start! Tekan 'q' untuk keluar.")
 
 while True:
     ret, frame = cap.read()
-    if not ret:
-        print("Gagal membaca kamera")
-        break
+    if not ret: break
 
-    # 3. Suruh AI mendeteksi gambar dari kamera
-    # conf=0.5 artinya cuma tampilkan kalau dia yakin di atas 50%
+    # 3. Prediksi (Tanpa plot otomatis)
     results = model.predict(frame, conf=0.4, show=False)
+    
+    # 4. GAMBAR MANUAL (Supaya Namanya Bisa Diatur Suka-Suka)
+    # Kita bongkar hasil deteksinya satu per satu
+    for box in results[0].boxes:
+        # Ambil koordinat kotak (x1, y1, x2, y2)
+        x1, y1, x2, y2 = map(int, box.xyxy[0])
+        
+        # Ambil angka confidence (keyakinan)
+        conf = float(box.conf[0])
+        
+        # Ambil nama asli dari model
+        cls_id = int(box.cls[0])
+        nama_asli = model.names[cls_id]
 
-    # 4. Gambar kotak hasil deteksi di layar
-    annotated_frame = results[0].plot()
+        # --- LOGIKA GANTI NAMA ---
+        # Kalau nama aslinya aneh-aneh ada bau 'banana', kita ganti jadi 'Banana'
+        if 'banana' in nama_asli.lower():
+            label_teks = f"Banana {conf:.2f}"
+        else:
+            # Kalau bukan pisang (misal jahe), biarin nama aslinya
+            label_teks = f"{nama_asli} {conf:.2f}"
+            
+        # Gambar Kotak (Warna Hijau: 0, 255, 0)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        
+        # Tulisan Label di atas kotak
+        cv2.putText(frame, label_teks, (x1, y1 - 10), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-    # 5. Tampilkan jendela hasil
-    cv2.imshow("TESTING NUTRI-SCANNER", annotated_frame)
+    # 5. Tampilkan
+    cv2.imshow("TESTING NUTRI-SCANNER", frame)
 
-    # Tekan tombol 'q' di keyboard untuk stop
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 cap.release()
 cv2.destroyAllWindows()
+
+
